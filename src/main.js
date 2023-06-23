@@ -1,12 +1,12 @@
-import * as THREE from 'three';
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {FlyControls} from 'three/examples/jsm/controls/FlyControls.js';
+import * as THREE from "three";
+import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
+import {FlyControls} from "three/examples/jsm/controls/FlyControls.js";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {FBXLoader} from "three/addons/loaders/FBXLoader.js";
 import {randInt} from "three/src/math/MathUtils.js";
 
+/** initializing three.js scene */
 const scene = new THREE.Scene();
-
 /* Creating light */
 const light = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
 
@@ -23,12 +23,13 @@ document.getElementById("webgl").appendChild(renderer.domElement);
 /* Creating a perspectiveCamera */
 const camera = createPerspectiveCamera(renderer);
 
-
 // Creating combined controls
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 const flyControls = new FlyControls(camera, renderer.domElement);
 // Disable automatic rotation for orbit controls
 orbitControls.autoRotate = false;
+
+const clock = new THREE.Clock();
 
 class CombinedControls {
     constructor(orbitControls, flyControls) {
@@ -48,23 +49,59 @@ class CombinedControls {
 
 // Set initial control state
 let controls = new CombinedControls(orbitControls, flyControls);
+/**end of initializing three.js objects */
 
+/**3d objects variables */
 let airplane;
+let airforce;
 let airplaneSound;
 let fallingSoldier;
 let parachutingSoldier;
 let landingSoldier;
 let soldierLandingAnimation;
 let parachute;
+let mixer;
+/**end 3d objects variables */
+
+/**assets loaders */
 const gltfLoader = new GLTFLoader();
 const fbxLoader = new FBXLoader();
 const textureLoader = new THREE.TextureLoader();
+/**end of assets loaders */
 
+/** physics variables */
 
-const clock = new THREE.Clock();
-// clock.maxFPS = 10;
+const dt = 1 / 60;
 
-let mixer;
+var airplaneVelocity = new THREE.Vector3(0, 0, -250);
+
+var soldierAcceleration = new THREE.Vector3(0, 0, 0);
+var soldierVelocity = new THREE.Vector3(0, 0, 0);
+var soldierMass = 70;
+var parachuteMass = 50;
+
+var weightForce = new THREE.Vector3(0, -70 * 50 * 9.8, 0);
+
+/** end of physics variables */
+
+/** physics methods */
+
+function applyVelocity(object, velocityVector) {
+   if (object.position.y >=0){
+       const velocity = velocityVector.clone();
+       velocity.multiplyScalar(dt);
+       object.position.add(velocity);
+   }
+}
+
+function applyForce(forceVector, acceleration, velocity, mass) {
+    const force = forceVector.clone();
+    acceleration = force.divideScalar(mass);
+    acceleration = acceleration.multiplyScalar(dt);
+    velocity.add(acceleration);
+}
+
+/** end of physics methods */
 
 let openParachute = false;
 
@@ -75,43 +112,61 @@ function init() {
     /* Adding objects to the scene */
     scene.add(light);
 
+    // adding world objects
     // createAntiAirCraft();
     // createCloudyMountain(-175000 , -17000 , 0);
     // createCloudyMountain(+175000 , -17000 , 0 , true);
 
-    createMountainTerrain(0 , 32000 , 100000);
-    createMountainTerrain(0 , 30000 , -120000 , true);
+    // createMountainTerrain(0 , 32000 , 100000);
+    // createMountainTerrain(100000 , 32000 , 0);
+    // createMountainTerrain(0 , 30000 , -120000 , true);
+    // createMountainTerrain(-120000 , 30000 , 0 , true);
 
-    createChurch(5000 , -165000 , 10000);
-    createRocks(70000 , 500 , 50000);
-    createRocks(-70000 , 500 , -70000);
+    // createChurch(5000 , -165000 , 10000);
+    // createRocks(70000 , 500 , 70000);
+    // createRocks(-70000 , 500 , -70000);
+    // createRocks(-70000 , 500 , 70000);
+    // createRocks(70000 , 500 , -70000);
 
     // creating plane
-    // createAirplane(0, 4000, 5000);
+    // createAirForce(0  , 2000 , 0);
+    createAirplane(0, 15000, 20000);
     // createAirplaneSound(camera);
     //
-    // createFallingSoldier(0, 0, 0);
+    createFallingSoldier(0, 0, 0);
     // createLandingSoldier(0, 0, 0);
     // createParachute();
     // createParachutingSoldier(0, 0, 0);
 
     // Set up the keyboard input
-    document.addEventListener('keydown', function (event) {
+    document.addEventListener("keydown", function (event) {
         if (event.keyCode === 32) {
             // creating the soldier
-            fallingSoldier.position.set(airplane.position.x, airplane.position.y, airplane.position.z);
+            fallingSoldier.position.set(
+                airplane.position.x,
+                airplane.position.y,
+                airplane.position.z
+            );
             fallingSoldier.visible = true;
         }
     });
 
-    document.addEventListener('keydown', function (event) {
+    document.addEventListener("keydown", function (event) {
         if (event.keyCode === 79) {
             openParachute = true;
             // scene.remove(fallingSoldier);
-            parachutingSoldier.position.set(fallingSoldier.position.x, fallingSoldier.position.y, fallingSoldier.position.z)
+            parachutingSoldier.position.set(
+                fallingSoldier.position.x,
+                fallingSoldier.position.y,
+                fallingSoldier.position.z
+            );
             fallingSoldier.visible = false;
             fallingSoldier = null;
-            parachute.position.set(parachutingSoldier.position.x, parachutingSoldier.position.y + 650, parachutingSoldier.position.z);
+            parachute.position.set(
+                parachutingSoldier.position.x,
+                parachutingSoldier.position.y + 650,
+                parachutingSoldier.position.z
+            );
             parachute.visible = true;
             parachutingSoldier.visible = true;
         }
@@ -120,10 +175,13 @@ function init() {
     animate(renderer, scene, camera, controls);
 }
 
+var lastTime = 0;
+
 /* Creating and animating the scene */
 function animate(renderer, scene, camera, controls) {
     requestAnimationFrame(() => animate(renderer, scene, camera, controls));
 
+    animateAirplane();
     animatingFallingSoldier();
     animatingParachutingSoldier();
     animateLandingSoldier();
@@ -135,8 +193,13 @@ function animate(renderer, scene, camera, controls) {
 }
 
 function createPerspectiveCamera(renderer) {
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000000);
-    window.addEventListener('resize', () => {
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        1,
+        5000000
+    );
+    window.addEventListener("resize", () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -156,13 +219,14 @@ function createGreenPlane() {
     // Create the plane geometry
     const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
 
-    const planeTexture = textureLoader.load('textures/grass/grass2.jpg');
+    const planeTexture = textureLoader.load("textures/grass/grass2.jpg");
     planeTexture.wrapS = THREE.RepeatWrapping;
     planeTexture.wrapT = THREE.RepeatWrapping;
     planeTexture.repeat.set(planeSize / 1000, planeSize / 1000);
 
     const grassMaterial = new THREE.MeshBasicMaterial({
-        map: planeTexture, side: THREE.DoubleSide
+        map: planeTexture,
+        side: THREE.DoubleSide,
     });
     const plane = new THREE.Mesh(geometry, grassMaterial);
 
@@ -175,11 +239,14 @@ function createGreenPlane() {
     const skyGeometry = new THREE.SphereGeometry(skyRadius, 64, 64);
 
     // Load the sky texture for the skybox
-    const skyTexture = textureLoader.load('textures/sky/sky.jpg');
+    const skyTexture = textureLoader.load("textures/sky/sky.jpg");
 
     // Create the sky material for the skybox
     const skyMaterial = new THREE.MeshBasicMaterial({
-        map: skyTexture, side: THREE.BackSide, transparent: true, opacity: 1
+        map: skyTexture,
+        side: THREE.BackSide,
+        transparent: true,
+        opacity: 1,
     });
 
     // Create the skybox mesh
@@ -188,50 +255,53 @@ function createGreenPlane() {
 }
 
 function createTree(x, y, z) {
-    gltfLoader.load('models/tree/scene.gltf', function (gltf) {
+    gltfLoader.load(
+        "models/tree/scene.gltf",
+        function (gltf) {
+            gltf.scene.position.set(x, y, z);
 
-        gltf.scene.position.set(x, y, z);
-
-        scene.add(gltf.scene);
-
-    }, undefined, function (error) {
-
-        console.error(error);
-
-    });
+            scene.add(gltf.scene);
+        },
+        undefined,
+        function (error) {
+            console.error(error);
+        }
+    );
 }
 
 function createAirplane(x, y, z) {
-    gltfLoader.load('models/plane/scene.gltf', function (gltf) {
-        airplane = gltf.scene;
+    gltfLoader.load(
+        "models/plane/scene.gltf",
+        function (gltf) {
+            airplane = gltf.scene;
 
-        airplane.position.set(x, y, z);
-        gltf.scene.scale.set(5, 5, 5);
+            airplane.position.set(x, y, z);
+            gltf.scene.scale.set(5, 5, 5);
 
-        airplane.rotation.x = -Math.PI / 10;
-        airplane.rotation.z = -Math.PI / 5;
-        airplane.rotation.y = Math.PI * 1.15;
+            airplane.rotation.x = -Math.PI / 10;
+            airplane.rotation.z = -Math.PI / 5;
+            airplane.rotation.y = Math.PI * 1.15;
 
-        scene.add(airplane);
-
-    }, undefined, function (error) {
-
-        console.error(error);
-
-    });
+            scene.add(airplane);
+        },
+        undefined,
+        function (error) {
+            console.error(error);
+        }
+    );
 }
 
 function createAirplaneSound(camera) {
-// Create a global audio listener
+    // Create a global audio listener
     const listener = new THREE.AudioListener();
     camera.add(listener);
     // Create a global audio source
     const sound = new THREE.Audio(listener);
     // Create an AudioLoader instance
     const audioLoader = new THREE.AudioLoader();
-    window.addEventListener('click', function () {
+    window.addEventListener("click", function () {
         // Load the audio file
-        audioLoader.load('sounds/airplane.mp3', function (buffer) {
+        audioLoader.load("sounds/airplane.mp3", function (buffer) {
             // Set the audio buffer to the sound source
             sound.setBuffer(buffer);
 
@@ -245,7 +315,7 @@ function createAirplaneSound(camera) {
 
 function animateAirplane() {
     if (airplane) {
-        airplane.position.z -= 5; // Adjust the movement speed as needed
+        applyVelocity(airplane, airplaneVelocity);
     }
 }
 
@@ -260,7 +330,11 @@ function handleAirplaneSound() {
             const maxDistance = 10000; // Adjust the maximum distance as needed
 
             // Map the distance to a volume range
-            let volume = THREE.MathUtils.clamp(1 - (distance - minDistance) / (maxDistance - minDistance), 0, 1); // Adjust the volume range as needed
+            let volume = THREE.MathUtils.clamp(
+                1 - (distance - minDistance) / (maxDistance - minDistance),
+                0,
+                1
+            ); // Adjust the volume range as needed
 
             if (distance <= 20) {
                 volume = 5;
@@ -280,35 +354,39 @@ function handleAirplaneSound() {
 }
 
 function createParachute(x = 0, y = 0, z = 0) {
-    gltfLoader.load('models/parachute/scene.gltf', function (gltf) {
-
-        parachute = gltf.scene;
-        parachute.position.set(x, y, z);
-        parachute.scale.set(400, 400, 400);
-        scene.add(parachute);
-        parachute.visible = false;
-
-    }, undefined, function (error) {
-
-        console.error(error);
-
-    });
+    gltfLoader.load(
+        "models/parachute/scene.gltf",
+        function (gltf) {
+            parachute = gltf.scene;
+            parachute.position.set(x, y, z);
+            parachute.scale.set(400, 400, 400);
+            scene.add(parachute);
+            parachute.visible = false;
+        },
+        undefined,
+        function (error) {
+            console.error(error);
+        }
+    );
 }
 
 function createFallingSoldier(x, y, z) {
-    fbxLoader.load('models/soldierFalling/Falling in the air.fbx', function (object) {
-        mixer = new THREE.AnimationMixer(object);
-        const action = mixer.clipAction(object.animations[0]);
-        action.play();
-        fallingSoldier = object;
-        fallingSoldier.position.set(x, y, z);
-        scene.add(fallingSoldier);
-        fallingSoldier.visible = false;
-    });
+    fbxLoader.load(
+        "models/soldierFalling/Falling in the air.fbx",
+        function (object) {
+            mixer = new THREE.AnimationMixer(object);
+            const action = mixer.clipAction(object.animations[0]);
+            action.play();
+            fallingSoldier = object;
+            fallingSoldier.position.set(x, y, z);
+            scene.add(fallingSoldier);
+            fallingSoldier.visible = false;
+        }
+    );
 }
 
 function createParachutingSoldier(x, y, z) {
-    fbxLoader.load('models/parachutingSoldier/model.fbx', function (object) {
+    fbxLoader.load("models/parachutingSoldier/model.fbx", function (object) {
         mixer = new THREE.AnimationMixer(object);
         const action = mixer.clipAction(object.animations[0]);
         action.play();
@@ -320,7 +398,7 @@ function createParachutingSoldier(x, y, z) {
 }
 
 function createLandingSoldier(x, y, z) {
-    fbxLoader.load('models/landing-soldier/model.fbx', function (object) {
+    fbxLoader.load("models/landing-soldier/model.fbx", function (object) {
         mixer = new THREE.AnimationMixer(object);
         const action = mixer.clipAction(object.animations[0]);
         action.play();
@@ -334,8 +412,8 @@ function createLandingSoldier(x, y, z) {
 
 function animatingFallingSoldier() {
     if (fallingSoldier && fallingSoldier.visible) {
-        fallingSoldier.position.y -= 20;
-
+        applyForce(weightForce, soldierAcceleration, soldierVelocity, soldierMass + parachuteMass);
+        applyVelocity(fallingSoldier, soldierVelocity);
         if (fallingSoldier.position.y === 0) {
             fallingSoldier = null;
         }
@@ -343,14 +421,23 @@ function animatingFallingSoldier() {
 }
 
 function animatingParachutingSoldier() {
-    if (parachutingSoldier && parachute && parachutingSoldier.visible && parachute.visible) {
+    if (
+        parachutingSoldier &&
+        parachute &&
+        parachutingSoldier.visible &&
+        parachute.visible
+    ) {
         parachutingSoldier.position.y -= 5;
         parachute.position.y -= 5;
 
         if (parachutingSoldier.position.y === 30) {
             parachutingSoldier.visible = false;
             parachute.visible = false;
-            landingSoldier.position.set(parachutingSoldier.position.x, parachutingSoldier.position.y, parachutingSoldier.position.z);
+            landingSoldier.position.set(
+                parachutingSoldier.position.x,
+                parachutingSoldier.position.y,
+                parachutingSoldier.position.z
+            );
             landingSoldier.visible = true;
             scene.remove(parachutingSoldier);
             scene.remove(parachute);
@@ -372,7 +459,7 @@ function animateLandingSoldier() {
 }
 
 function createAntiAirCraft() {
-    gltfLoader.load('models/anti-air/scene.gltf', function (gltf) {
+    gltfLoader.load("models/anti-air/scene.gltf", function (gltf) {
         const aircraft = gltf.scene;
         mixer = new THREE.AnimationMixer(aircraft);
         const action = mixer.clipAction(gltf.animations[0]);
@@ -383,10 +470,10 @@ function createAntiAirCraft() {
     });
 }
 
-function createCloudyMountain(x, y ,z , flip = false){
-    gltfLoader.load('models/cloudy_mountain/scene.gltf', function (gltf) {
+function createCloudyMountain(x, y, z, flip = false) {
+    gltfLoader.load("models/cloudy_mountain/scene.gltf", function (gltf) {
         gltf.scene.scale.set(2200, 2200, 2200);
-        gltf.scene.position.set(x , y  , z);
+        gltf.scene.position.set(x, y, z);
         if (flip) {
             gltf.scene.rotation.y = Math.PI;
         }
@@ -394,32 +481,43 @@ function createCloudyMountain(x, y ,z , flip = false){
     });
 }
 
-function createMountainTerrain(x , y , z , flip = false){
-    gltfLoader.load('models/mountain_terrain/scene.gltf', function (gltf) {
+function createMountainTerrain(x, y, z, flip = false) {
+    gltfLoader.load("models/mountain_terrain/scene.gltf", function (gltf) {
         gltf.scene.scale.set(500, 500, 500);
-        gltf.scene.position.set(x , y  , z);
-        gltf.scene.rotation.y = -Math.PI/4;
+        gltf.scene.position.set(x, y, z);
+        gltf.scene.rotation.y = -Math.PI / 4;
         if (flip) {
             gltf.scene.rotation.y = Math.PI;
-            gltf.scene.rotation.z = -Math.PI/35;
+            gltf.scene.rotation.z = -Math.PI / 35;
         }
         scene.add(gltf.scene);
     });
 }
 
-function createChurch(x , y , z){
-    gltfLoader.load('models/church/scene.gltf', function (gltf) {
+function createChurch(x, y, z) {
+    gltfLoader.load("models/church/scene.gltf", function (gltf) {
         gltf.scene.scale.set(550, 550, 550);
-        gltf.scene.position.set(x , y  , z);
+        gltf.scene.position.set(x, y, z);
         gltf.scene.rotation.y = -Math.PI;
         scene.add(gltf.scene);
     });
 }
 
-function createRocks(x , y , z){
-    gltfLoader.load('models/rocks/scene.gltf', function (gltf) {
+function createRocks(x, y, z) {
+    gltfLoader.load("models/rocks/scene.gltf", function (gltf) {
         gltf.scene.scale.set(5000, 8000, 1000);
-        gltf.scene.position.set(x , y  , z);
+        gltf.scene.position.set(x, y, z);
+        scene.add(gltf.scene);
+    });
+}
+
+function createAirForce(x, y, z) {
+    gltfLoader.load("models/air-forces/scene.gltf", function (gltf) {
+        mixer = new THREE.AnimationMixer(gltf.scene);
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+        gltf.scene.position.set(x, y, z);
+        airforce = gltf.scene;
         scene.add(gltf.scene);
     });
 }
