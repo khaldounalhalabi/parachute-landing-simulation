@@ -1,23 +1,35 @@
-import {applyDragZ, applyForce, applyVelocity, applyDragY, velocities, soldier} from "./physics";
+import {calculateDragZ, applyForce, applyVelocity, calculateDragY, velocities, soldier , dt, gui} from "./physics";
 import {controls, camera, renderer, scene, createGreenPlane} from "./environment";
-import {createAnimatedSoldier , stateMachine , soldierMixer , soldierModel} from "./soldier";
+import {createAnimatedSoldier , stateMachine , soldierMixer , soldierModel, disableSoldier} from "./soldier";
 import {createAirplane , airplane , airplaneSound} from "./airplane";
-import {createParachute , parachute} from "./models";
+import {createAntiAirCraft, createMountainTerrain, createParachute, createRocks, parachute} from "./models";
 
 /**3d objects variables */
-export let airforce;
 export let mixer;
 /**end 3d objects variables */
-
-const dt = 1 / 60;
 
 let openParachute = false;
 
 function init() {
     createGreenPlane();
     createParachute();
-    createAirplane(0, 20000, 20000);
-    createAnimatedSoldier(0, 500, 0);
+    createAirplane(0, 5000, 20000);
+    createAnimatedSoldier(0, -500, 0);
+
+    // createAntiAirCraft();
+    // createMountainTerrain(0 , 32000 , 100000);
+    // createMountainTerrain(100000 , 32000 , 0);
+    // createMountainTerrain(0 , 30000 , -120000 , true);
+    // createMountainTerrain(-120000 , 30000 , 0 , true);
+    // createRocks(70000 , 500 , 70000);
+    // createRocks(-70000 , 500 , -70000);
+    // createRocks(-70000 , 500 , 70000);
+    // createRocks(70000 , 500 , -70000);
+
+    // creating plane
+    // createAirForce(0  , 2000 , 0);
+
+    // createAirplaneSound(camera);
 
     // Set up the keyboard input
     document.addEventListener("keydown", function (event) {
@@ -29,7 +41,8 @@ function init() {
                 airplane.position.y,
                 airplane.position.z
             );
-            soldierModel.visible = true;
+
+            parachute.visible = false;
         }
     });
 
@@ -54,10 +67,10 @@ function animate(renderer, scene, camera, controls) {
     requestAnimationFrame(() => animate(renderer, scene, camera, controls));
 
     animateAirplane();
-    console.log(soldier.velocity.length());
+    gui.updateDisplay()
 
 
-    if (soldierModel?.visible) {
+    if (stateMachine.currentState == 'falling' || stateMachine.currentState == 'parachuting' || stateMachine.currentState == 'landing') {
         animatingFallingSoldier();
     }
 
@@ -76,11 +89,11 @@ function animateAirplane() {
 function animatingFallingSoldier() {
     if (soldierModel && soldierModel.visible) {
         if (soldierModel.position.y > 100) {
-            applyDragZ();
+            calculateDragZ();
             applyForce(soldier.weight, soldier.acceleration, soldier.velocity, soldier.mass);
             applyForce(soldier.dragZ, soldier.acceleration, soldier.velocity, soldier.mass);
             if (openParachute) {
-                applyDragY();
+                calculateDragY();
                 applyForce(soldier.dragY, soldier.acceleration, soldier.velocity, soldier.mass);
             }
 
@@ -92,10 +105,10 @@ function animatingFallingSoldier() {
             parachute.position.x = soldierModel.position.x;
             parachute.position.z = soldierModel.position.z;
         }
-        if (soldierModel.position.y <= 200) {
+        if (soldierModel.position.y <= 100) {
             soldierModel.position.y -= 1;
             stateMachine.transition('landing');
-            soldierModel = false;
+            disableSoldier();
             parachute.visible = false;
         }
     }

@@ -1,4 +1,5 @@
 import {THREE ,scene , gltfLoader} from "./environment";
+import {gui} from "./physics";
 
 let soldierGltf;
 export let soldierMixer;
@@ -6,15 +7,17 @@ export let soldierModel;
 
 export function createAnimatedSoldier(x, y, z) {
     gltfLoader.load(
-        "models/soldier.gltf",
+        "models/soldier/soldier.gltf",
         function (gltf) {
             soldierModel = gltf.scene;
             soldierModel.position.set(x, y, z);
             soldierModel.scale.set(100, 100, 100);
+            soldierModel.rotation.y = Math.PI;
             soldierMixer = new THREE.AnimationMixer(soldierModel);
             scene.add(soldierModel);
-            soldierModel.visible = false;
             soldierGltf = gltf;
+            gui.add(soldierModel.position , 'y' , undefined , undefined).name('soldier height');
+
         },
         undefined,
         function (error) {
@@ -73,4 +76,9 @@ function blendAnimations(character, mixer, newState) {
         const action = mixer.clipAction(animationsToBlend);
         action.play();
     }
+}
+
+export function disableSoldier()
+{
+    soldierModel = false;
 }

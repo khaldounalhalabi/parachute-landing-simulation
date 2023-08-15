@@ -23,3 +23,9 @@
     // createAirForce(0  , 2000 , 0);
 
     // createAirplaneSound(camera);
+
+
+
+
+    
+    gltf-pipeline -i E:\parachute-landing-simulation\models\plane -o airplaneDraco.gltf -d

@@ -4,9 +4,8 @@ import {FlyControls} from "three/examples/jsm/controls/FlyControls.js";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export const gltfLoader = new GLTFLoader();
+
 export const THREE = three;
-
-
 
 /** initializing three.js scene */
 export const scene = new THREE.Scene();
@@ -57,7 +56,7 @@ export let controls = new CombinedControls(orbitControls, flyControls);
 
 function createPerspectiveCamera(renderer) {
     const camera = new THREE.PerspectiveCamera(
-        30,                            // FOV (in degrees)
+        75,                            // FOV (in degrees)
         window.innerWidth / window.innerHeight, // Aspect ratio
         0.1,                           // Near clipping plane
         5000000                        // Far clipping plane

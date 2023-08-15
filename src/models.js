@@ -5,6 +5,8 @@ import {mixer} from "./main";
 import {gltfLoader} from "./environment";
 
 export let parachute;
+export let airforce;
+
 
 export function createChurch(x, y, z) {
     gltfLoader.load("models/church/scene.gltf", function (gltf) {
