@@ -29,3 +29,6 @@
 
     
     gltf-pipeline -i E:\parachute-landing-simulation\models\plane -o airplaneDraco.gltf -d
+
+
+    gltf-pipeline -i E:\parachute-landing-simulation\models\soldier\soldier.gltf -o output.gltf --draco.compressionLevel=10

@@ -56,7 +56,7 @@ export let controls = new CombinedControls(orbitControls, flyControls);
 
 function createPerspectiveCamera(renderer) {
     const camera = new THREE.PerspectiveCamera(
-        75,                            // FOV (in degrees)
+        30,                            // FOV (in degrees)
         window.innerWidth / window.innerHeight, // Aspect ratio
         0.1,                           // Near clipping plane
         5000000                        // Far clipping plane
