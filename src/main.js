@@ -47,7 +47,7 @@ function init() {
 
     // Set up the keyboard input
     document.addEventListener("keydown", function (event) {
-        if (event.keyCode === 32) {
+        if (event.code === 'Space') {
             // creating the soldier
             stateMachine.transition('falling');
             soldierModel.position.set(
@@ -63,7 +63,7 @@ function init() {
     document.addEventListener("keydown", function (event) {
         let tempVelocity = soldier.velocity;
         console.log(tempVelocity.y);
-        if (event.keyCode === 79 && -tempVelocity.y < descentRate) {
+        if (event.code === 'KeyO' && -tempVelocity.y < descentRate) {
             openParachute = true;
             stateMachine.transition('parachuting');
             parachute.position.set(
@@ -72,7 +72,7 @@ function init() {
                 soldierModel.position.z
             );
             parachute.visible = true;
-        } else if (event.keyCode === 79) {
+        } else if (event.code === 'KeyO') {
             stateMachine.transition('parachuting');
             parachute.position.set(
                 soldierModel.position.x,
@@ -112,7 +112,11 @@ function animateAirplane() {
 }
 
 function animatingFallingSoldier() {
-    if (stateMachine.currentState == 'falling' || stateMachine.currentState == 'parachuting' || stateMachine.currentState == 'landing') {
+    if (
+        stateMachine.currentState === 'falling'
+        || stateMachine.currentState === 'parachuting'
+        || stateMachine.currentState === 'landing'
+    ) {
         if (soldierModel) {
             if (soldierModel.position.y > 100) {
                 calculateDragZ();
