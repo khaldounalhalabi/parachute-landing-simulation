@@ -1,8 +1,19 @@
-import {calculateDragZ, applyForce, applyVelocity, calculateDragY, velocities, soldier , dt, gui, applyRotation, calculateDescentRate} from "./physics";
-import {controls, camera, renderer, scene, createGreenPlane} from "./environment";
-import {createAnimatedSoldier , stateMachine , soldierMixer , soldierModel, disableSoldier} from "./soldier";
-import {createAirplane , airplane , airplaneSound} from "./airplane";
-import {createAntiAirCraft, createMountainTerrain, createParachute, createRocks, parachute} from "./models";
+import {
+    applyForce,
+    applyRotation,
+    applyVelocity,
+    calculateDescentRate,
+    calculateDragY,
+    calculateDragZ,
+    dt,
+    gui,
+    soldier,
+    velocities
+} from "./physics";
+import {camera, controls, createGreenPlane, renderer, scene} from "./environment";
+import {createAnimatedSoldier, disableSoldier, soldierMixer, soldierModel, stateMachine} from "./soldier";
+import {airplane, createAirplane} from "./airplane";
+import {createParachute, parachute} from "./models";
 
 /**3d objects variables */
 export let mixer;
@@ -10,8 +21,7 @@ export let mixer;
 
 let openParachute = false;
 let descentRate = calculateDescentRate();
-gui.add({descentRate : descentRate}, 'descentRate', undefined, undefined).name('descent rate');
-
+gui.add({descentRate: descentRate}, 'descentRate', undefined, undefined).name('descent rate');
 
 
 function init() {
@@ -62,7 +72,7 @@ function init() {
                 soldierModel.position.z
             );
             parachute.visible = true;
-        }else if(event.keyCode === 79){
+        } else if (event.keyCode === 79) {
             stateMachine.transition('parachuting');
             parachute.position.set(
                 soldierModel.position.x,
@@ -73,7 +83,9 @@ function init() {
         }
     });
 
-    window.addEventListener('keydown', (e) => {applyRotation(soldier.dragY , e)});
+    window.addEventListener('keydown', (e) => {
+        applyRotation(soldier.dragY, e)
+    });
 
     animate(renderer, scene, camera, controls);
 }
@@ -128,7 +140,7 @@ function animatingFallingSoldier() {
                 parachute.visible = false;
             }
         }
-    }   
+    }
 }
 
 init();

@@ -1,10 +1,9 @@
-import {camera, scene} from "./environment";
 // import {airplane , airplaneSound} from "./main";
-import {THREE} from "./environment";
-import {gltfLoader} from "./environment";
+import {camera, gltfLoader, scene, THREE} from "./environment";
 
 export let airplane;
 export let airplaneSound;
+
 export function createAirplane(x, y, z) {
     gltfLoader.load(
         "models/plane/scene.gltf",
@@ -26,6 +25,7 @@ export function createAirplane(x, y, z) {
         }
     );
 }
+
 export function createAirplaneSound(camera) {
     // Create a global audio listener
     const listener = new THREE.AudioListener();
@@ -47,6 +47,7 @@ export function createAirplaneSound(camera) {
         });
     });
 }
+
 export function handleAirplaneSound() {
     if (airplaneSound) {
         if (airplane) {
